@@ -4,7 +4,7 @@
 #include "vector.h"
 #include "spheres.h"
 #include "color.h"
-#include "assg.h"
+#include "main.h"
 
  // Initialize variables to store input data
 World world;
@@ -35,21 +35,8 @@ int main(int argc, char *argv[]){
     readInput(inputFile, &world, &backgroundColor, &lightPosition, &viewportWidth);
 
     freopen(outputFile, "w", stdout);
-    // Output the calculated results for Milestone 1
-    #ifdef MS1
-        // Redirect output to the specified output file for Milestone 1
-        for (int i = 0; i < world.size; i++){
-            print_milestone1_output( i ,backgroundColor, lightPosition, viewportWidth, (world.spheres[i]), world.size);
-        }
-    #endif
-
+   
     createCameraViewport(viewportHeightG, (float)widthG / heightG, focalLengthG);
-
-     // For full scene rendering in black and white for milestone 2
-    #ifdef MS2
-        milestone2RenderScene(world.spheres, world.size, lightPosition, lightBrightnessG, widthG, heightG);
-    #endif
-
     // For full scene rendering in color for Final submission
     #ifdef FS
         FinalRenderScene(world.spheres, world.size, lightPosition, lightBrightnessG, widthG, heightG);
@@ -95,12 +82,6 @@ void readInput(const char *inputFile, World *world, Vec3 *backgroundColor, Vec3 
     // Read background color index
     fscanf(file, "%d", &backgroundColorIndexG);
     *backgroundColor = colors[backgroundColorIndexG];
-    #ifndef FS
-        // For milestone 1 and 2, force background color to (0,0,0)
-        backgroundColor->x = 0.0f;
-        backgroundColor->y = 0.0f;
-        backgroundColor->z = 0.0f;
-    #endif
 
     // Read spheres
     fscanf(file, "%d", &numSpheresG);
@@ -110,11 +91,6 @@ void readInput(const char *inputFile, World *world, Vec3 *backgroundColor, Vec3 
         int colorIndex;
         fscanf(file, "%f %f %f %f %d", &pos.x, &pos.y, &pos.z, &radius, &colorIndex);
         Vec3 sphereColor = colors[colorIndex];
-        
-        #ifndef FS
-            // For milestone 1 and 2, force sphere color to (1.0,1.0,1.0)
-            sphereColor = (Vec3){1.0f, 1.0f, 1.0f};
-        #endif
         Sphere *sphere = createSphere(radius, pos, sphereColor);
         addSphere(world, sphere);
         
@@ -128,70 +104,7 @@ void readInput(const char *inputFile, World *world, Vec3 *backgroundColor, Vec3 
     fclose(file);
 }
 
-void print_milestone1_output(int i, Vec3 backgroundColor, Vec3 lightPosition, float viewportWidth, Sphere* spheres, int numSpheres) {
 
-    Vec3 result;
-    if (i == 0) {
-        // Vector operations on background color and light position
-        result = add(backgroundColor, lightPosition);
-        printf("(%.1f, %.1f, %.1f) + (%.1f, %.1f, %.1f) = (%.1f, %.1f, %.1f)\n",
-            backgroundColor.x, backgroundColor.y, backgroundColor.z,
-            lightPosition.x, lightPosition.y, lightPosition.z,
-            result.x, result.y, result.z);
-        
-
-        result = subtract(backgroundColor, lightPosition);
-        printf("(%.1f, %.1f, %.1f) - (%.1f, %.1f, %.1f) = (%.1f, %.1f, %.1f)\n",
-            backgroundColor.x, backgroundColor.y, backgroundColor.z,
-            lightPosition.x, lightPosition.y, lightPosition.z,
-            result.x, result.y, result.z);
-        
-
-        result = scalarMultiply(viewportWidth, lightPosition);
-        printf("%.1f * (%.1f, %.1f, %.1f) = (%.1f, %.1f, %.1f)\n",
-            viewportWidth,
-            lightPosition.x, lightPosition.y, lightPosition.z,
-            result.x, result.y, result.z);
-        
-
-        result = normalize(lightPosition);
-        printf("normalize(%.1f, %.1f, %.1f) = (%.1f, %.1f, %.1f)\n",
-            lightPosition.x, lightPosition.y, lightPosition.z,
-            result.x, result.y, result.z);
-
-        
-        
-    }
-    printf("\n");
-    // Output for each sphere
-    result = scalarDivide(spheres->color, spheres->r);
-    printf("(%.1f, %.1f, %.1f) / %.1f = (%.1f, %.1f, %.1f)\n",
-           spheres->color.x, spheres->color.y, spheres->color.z,
-           spheres->r,
-           result.x, result.y, result.z);
-    
-
-    float dotProduct = dot(lightPosition, spheres->pos);
-    printf("dot((%.1f, %.1f, %.1f), (%.1f, %.1f, %.1f)) = %.1f\n",
-           lightPosition.x, lightPosition.y, lightPosition.z,
-           spheres->pos.x, spheres->pos.y, spheres->pos.z,
-           dotProduct);
-    
-
-    float dist = distance(lightPosition, spheres->pos);
-    printf("distance((%.1f, %.1f, %.1f), (%.1f, %.1f, %.1f)) = %.1f\n",
-           lightPosition.x, lightPosition.y, lightPosition.z,
-           spheres->pos.x, spheres->pos.y, spheres->pos.z,
-           dist);
-    
-
-    float len = length(spheres->pos);
-    printf("length(%.1f, %.1f, %.1f) = %.1f\n",
-           spheres->pos.x, spheres->pos.y, spheres->pos.z,
-           len);
-    
-   
-}
 
 void createCameraViewport(float viewportHeight, float aspectRatio, float focalLength) {
     // Initialize camera
@@ -238,42 +151,6 @@ int isInShadow(Vec3 intersection, Vec3 normal, Vec3 lightPos, Sphere **spheres, 
     }
     return 0;
 }
-
-void milestone2RenderScene(Sphere **spheres, int numSpheres, Vec3 lightPos, float brightness, int imgWidth, int imgHeight) {
-    
-    printf("P3\n%d %d\n255\n", imgWidth, imgHeight);
-
-    for (int y = imgHeight - 1; y >= 0; y--) {
-        for (int x = 0; x < imgWidth; x++) {
-            Vec3 rayDirection = calculateRayDirection(x, y, imgWidth, imgHeight);
-            float closestT = INFINITY;
-            Sphere *closestSphere = NULL;
-
-            for (int i = 0; i < numSpheres; i++) {
-                float t;
-                if (doesIntersect(spheres[i], camera.position, rayDirection, &t) && t < closestT) {
-                    closestT = t;
-                    closestSphere = spheres[i];
-                }
-            }
-
-            Vec3 color = {0, 0, 0}; // Default background color
-            if (closestSphere) {
-                Vec3 intersection = add(camera.position, scalarMultiply(closestT, rayDirection));
-                Vec3 normal = normalize(subtract(intersection, closestSphere->pos));
-                Vec3 surfaceColor = calculateLighting(intersection, normal, lightPos, brightness, closestSphere->color);
-
-                if (isInShadow(intersection, normal, lightPos, spheres, numSpheres)) {
-                    surfaceColor = scalarMultiply(0.1, surfaceColor); // Dim the color in shadow
-                }
-                color = surfaceColor;
-            }
-            writeColour(color);
-        }
-    }
-
-}
-
 
 void FinalRenderScene(Sphere **spheres, int numSpheres, Vec3 lightPos, float brightness, int imgWidth, int imgHeight) {
     printf("P3\n%d %d\n255\n", imgWidth, imgHeight);
