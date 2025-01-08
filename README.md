@@ -1,12 +1,9 @@
 # 3D-Image-Renderer
 
-This project implements a basic ray tracing program that simulates the rendering of 3D scenes. It reads input data such as sphere positions, colors, lighting parameters, and viewport settings from a file, and then renders the scene based on the ray tracing algorithm. This README provides detailed information about how to set up, run, and understand the project.
-
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Requirements](#requirements)
 3. [Running the program](#input-format)
-
 
 
 ## Introduction
@@ -33,6 +30,7 @@ To view the image at its full resolution, you have some other options: [This web
 To customize the image, you must first understand the structure of the input file.
 'input_file.txt' has the following structure:
 
+```
 <image width (int)> <image height (int)>
 <viewport height (float)>
 <focal length (float)>
@@ -45,8 +43,9 @@ To customize the image, you must first understand the structure of the input fil
 <sphere 2 position (3float)> <sphere 2 radius (float)> <sphere 2 color index (int)>
 ...
 <sphere n position (3float)> <sphere n radius (float)> <sphere n color index (int)>
+```
 
-You can change the input.txt file to get various images such as the ones below:
+You can change 'input.txt' to get various images such as the ones below:
 
 #### Example 1
 
